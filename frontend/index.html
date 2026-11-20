@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyShield — Aviation Safety & Incident Reporting</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-block">
+      <div class="brand-title-row">
+        <h1>SkyShield</h1>
+        <span class="trust-pill" title="Schema validation and database persistence active">
+          <svg class="shield-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+          Audit &amp; Compliance Console
+        </span>
+      </div>
+      <p>Aviation Safety, Compliance &amp; Investigation Reporting System</p>
+    </div>
+
+    <div class="header-controls">
+      <button id="themeToggleBtn" type="button" class="btn btn-secondary" aria-pressed="false">
+        Night Ops Theme
+      </button>
+      <button id="refreshBtn" type="button" class="btn btn-secondary">Sync Reports</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="visual-strip" aria-label="Operational safety domains">
+      <article class="visual-card">
+        <div class="visual-thumb visual-ramp" role="img" aria-label="Ground crew marshaling aircraft safely along apron taxi lines"></div>
+        <div class="visual-caption">
+          <strong>Apron &amp; Ramp Safety</strong>
+          <span>Marshaling, ground clearance &amp; runway compliance</span>
+        </div>
+      </article>
+
+      <article class="visual-card">
+        <div class="visual-thumb visual-atc" role="img" aria-label="Air traffic control tower monitoring airspace and communications"></div>
+        <div class="visual-caption">
+          <strong>Tower &amp; Dispatch Oversight</strong>
+          <span>Root-cause tracking, status enums &amp; audit trail</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="card">
+      <div class="card-heading-row">
+        <h2>Report New Incident</h2>
+        <span class="security-tag">Validated Schema &bull; PostgreSQL</span>
+      </div>
+
+      <form id="incidentForm" class="form-grid">
+        <div class="field">
+          <label for="tail_number">Tail Number *</label>
+          <input id="tail_number" name="tail_number" type="text" placeholder="VT-SKY" required />
+        </div>
+
+        <div class="field">
+          <label for="incident_date">Incident Date</label>
+          <input id="incident_date" name="incident_date" type="date" />
+        </div>
+
+        <div class="field">
+          <label for="location">Location *</label>
+          <input id="location" name="location" type="text" placeholder="DEL - Runway 29" required />
+        </div>
+
+        <div class="field">
+          <label for="severity">Severity *</label>
+          <select id="severity" name="severity" required>
+            <option value="Low">Low</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="regulatory_body">Regulatory Body</label>
+          <input id="regulatory_body" name="regulatory_body" type="text" placeholder="DGCA" />
+        </div>
+
+        <div class="field checkbox-field">
+          <label>
+            <input id="is_compliant" name="is_compliant" type="checkbox" checked />
+            Compliant with safety regulations
+          </label>
+        </div>
+
+        <div class="field full-width">
+          <label for="description">Description *</label>
+          <textarea id="description" name="description" rows="3" placeholder="Provide objective factual details of the occurrence..." required></textarea>
+        </div>
+
+        <div class="field full-width">
+          <label for="root_cause">Preliminary Root Cause</label>
+          <input id="root_cause" name="root_cause" type="text" placeholder="Optional initial root-cause assessment" />
+        </div>
+
+        <div class="field full-width actions">
+          <button type="submit" class="btn btn-primary">Submit Verified Report</button>
+          <span class="security-note">Entries are validated against safety enums and recorded with timestamps.</span>
+          <span id="formMessage" class="status-msg"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="list-header">
+        <h2>Logged Incidents (<span id="incidentCount">0</span>)</h2>
+        <div class="filters">
+          <input id="filterTail" type="text" placeholder="Search tail # (e.g. VT-)" />
+          <select id="filterSeverity">
+            <option value="">All Severities</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+          <select id="filterStatus">
+            <option value="">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="under_investigation">Under Investigation</option>
+            <option value="closed">Closed</option>
+          </select>
+          <select id="filterCompliance">
+            <option value="">All Compliance</option>
+            <option value="true">Compliant (Yes)</option>
+            <option value="false">Non-Compliant (No)</option>
+          </select>
+          <button id="clearFiltersBtn" type="button" class="btn btn-secondary">Clear</button>
+        </div>
+      </div>
+
+      <div class="summary-strip">
+        <div class="stat-box">
+          <span class="stat-label">Visible Reports</span>
+          <strong id="statTotal">0</strong>
+        </div>
+        <div class="stat-box stat-box-alert">
+          <span class="stat-label">Non-Compliant</span>
+          <strong id="statNonCompliant">0</strong>
+        </div>
+        <div class="stat-box stat-box-info">
+          <span class="stat-label">Open Investigations</span>
+          <strong id="statOpen">0</strong>
+        </div>
+      </div>
+
+      <div id="actionBanner" class="action-banner"></div>
+
+      <div id="incidentsList" class="incidents-list">
+        <p class="muted">Loading incidents...</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
